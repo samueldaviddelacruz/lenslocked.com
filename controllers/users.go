@@ -17,6 +17,7 @@ func NewUsers() *Users {
 	}
 }
 
+// Users Represents a Users controller
 type Users struct {
 	NewView *views.View
 }
@@ -36,5 +37,11 @@ func (u *Users) New(w http.ResponseWriter, r *http.Request) {
 //
 // POST /signup
 func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "This is a temp response")
+	if err := r.ParseForm(); err != nil {
+		panic(err)
+	}
+
+	fmt.Fprintln(w, r.PostForm["email"])
+	fmt.Fprintln(w, r.PostForm["password"])
+
 }
