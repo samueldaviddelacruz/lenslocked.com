@@ -4,8 +4,15 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gorilla/schema"
+
 	"github.com/samueldaviddelacruz/lenslocked.com/views"
 )
+
+type SignupForm struct {
+	Email    string `schema:"email"`
+	Password string `schema:"password"`
+}
 
 // NewUsers is used to create a new Users controller.
 // This function will panic if the templates are not
@@ -41,7 +48,12 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	fmt.Fprintln(w, r.PostForm["email"])
-	fmt.Fprintln(w, r.PostForm["password"])
+	dec := schema.NewDecoder()
+	var form SignupForm
+	if err := dec.Decode(&form, r.PostForm); err != nil {
+		panic(err)
+	}
+
+	fmt.Fprintln(w, form)
 
 }
