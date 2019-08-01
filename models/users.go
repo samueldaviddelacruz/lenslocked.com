@@ -63,6 +63,18 @@ func (us *UserService) DestructiveReset() {
 	us.db.AutoMigrate(&User{})
 }
 
+// Create will create the provided user and backfill data
+// like the ID, CreatedAt, and UpdatedAt fields.
+func (us *UserService) Create(user *User) error {
+	return us.db.Create(user).Error
+}
+
+// Update will update the provided user with all of the
+// data provided in the user object.
+func (us *UserService) Update(user *User) error {
+
+}
+
 type User struct {
 	gorm.Model
 	Name  string
