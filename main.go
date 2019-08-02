@@ -34,6 +34,9 @@ func main() {
 
 	r.HandleFunc("/signup", usersC.New).Methods("GET")
 	r.HandleFunc("/signup", usersC.Create).Methods("POST")
+
+	r.Handle("/login", usersC.LoginView).Methods("GET")
+	r.HandleFunc("/login", usersC.Login).Methods("POST")
 	fmt.Println("Starting the server on port :4000")
 	http.ListenAndServe(":4000", r)
 }
