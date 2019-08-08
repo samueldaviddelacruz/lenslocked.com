@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/samueldaviddelacruz/lenslocked.com/models"
@@ -40,21 +41,8 @@ type Users struct {
 //
 // GET /signup
 func (u *Users) New(w http.ResponseWriter, r *http.Request) {
-	/*
-		alert := Alert{
-			Level:   "warning",
-			Message: "successfully rendered a dynamic alert!",
-		}
 
-	*/
-	d := views.Data{
-		Alert: &views.Alert{
-			Level:   views.AlertLvlError,
-			Message: "something went wrong",
-		},
-	}
-
-	if err := u.NewView.Render(w, d); err != nil {
+	if err := u.NewView.Render(w, nil); err != nil {
 		panic(err)
 	}
 }
@@ -64,22 +52,36 @@ func (u *Users) New(w http.ResponseWriter, r *http.Request) {
 //
 // POST /signup
 func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
+	var vd views.Data
+
 	var form SignupForm
 	if err := parseForm(r, &form); err != nil {
-		panic(err)
+		log.Println(err)
+		vd.Alert = &views.Alert{
+			Level:   views.AlertLvlError,
+			Message: views.AlertMsgGeneric,
+		}
+		u.NewView.Render(w, vd)
+		return
 	}
 	user := models.User{
 		Name:     form.Name,
 		Email:    form.Email,
 		Password: form.Password,
 	}
+
 	if err := u.us.Create(&user); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		vd.Alert = &views.Alert{
+			Level:   views.AlertLvlError,
+			Message: err.Error(),
+		}
+		u.NewView.Render(w, vd)
 		return
 	}
+
 	err := u.signIn(w, &user)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
 	http.Redirect(w, r, "/cookieTest", http.StatusFound)
