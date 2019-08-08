@@ -1,7 +1,6 @@
 package models
 
 import (
-	"errors"
 	"regexp"
 	"strings"
 
@@ -11,45 +10,6 @@ import (
 	"github.com/samueldaviddelacruz/lenslocked.com/rand"
 
 	"golang.org/x/crypto/bcrypt"
-)
-
-var (
-	// ErrNotFound is returned when a resource cannot be found
-	// in the database
-	ErrNotFound = errors.New("models: resource not found")
-	// ErrIDInvalid is returned when an invalid ID is provided
-	// to a method like Delete.
-	ErrIDInvalid = errors.New("models: ID provided was invalid")
-	// ErrPasswordIncorrect is returned when an invalid password
-	// is used when attempting to authenticate a user.
-	ErrPasswordIncorrect = errors.New("models: incorrect password provided")
-
-	// ErrEmailRequired is returned when an email address is not
-	// provided when creating an user.
-	ErrEmailRequired = errors.New("models: Email address is required")
-	// ErrEmailInvalid is returned when an email address provided
-	// does not match any of our requirements
-	ErrEmailInvalid = errors.New("models: Email address is not valid")
-
-	// ErrEmailTaken is returned when an update or create is attempted
-	// with an email address that is already in use.
-	ErrEmailTaken = errors.New("models: email address is already taken")
-
-	// ErrPasswordTooShort is returned when an update or create is
-	// attempted with a user password that is less than 8 characthers
-	ErrPasswordTooShort = errors.New("models: password must be at least 8 characthers")
-
-	// ErrPasswordRequired is returned when a create is attempted
-	// without a user password provided.
-	ErrPasswordRequired = errors.New("models: password is required")
-
-	// ErrRememberTooShort is returned when a remember token is
-	// not at least 32 bytes
-	ErrRememberTooShort = errors.New("models: Remember token must be at least 32 bytes")
-
-	// ErrRememberRequired is returned when a create or update is attempted
-	// without a user remember token hash.
-	ErrRememberRequired = errors.New("models: remember is required")
 )
 
 const userPwPepper = "mUGD8rTdJe"
