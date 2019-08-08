@@ -20,13 +20,14 @@ const (
 func main() {
 	psqlinfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
-	us, err := models.NewUserService(psqlinfo)
+	services, err := models.NewServices(psqlinfo)
 	must(err)
-	defer us.Close()
+	// TODO: Fix this
+	//defer us.Close()
 	//must(us.DestructiveReset())
-	must(us.AutoMigrate())
+	//must(us.AutoMigrate())
 	staticC := controllers.NewStatic()
-	usersC := controllers.NewUsers(us)
+	usersC := controllers.NewUsers(services.User)
 
 	r := mux.NewRouter()
 	r.Handle("/", staticC.Home).Methods("GET")
