@@ -29,6 +29,8 @@ func main() {
 	staticC := controllers.NewStatic()
 	usersC := controllers.NewUsers(services.User)
 
+	galleriesC := controllers.NewGalleries(services.Gallery)
+
 	r := mux.NewRouter()
 	r.Handle("/", staticC.Home).Methods("GET")
 	r.Handle("/contact", staticC.Contact).Methods("GET")
@@ -40,6 +42,10 @@ func main() {
 	r.HandleFunc("/login", usersC.Login).Methods("POST")
 
 	r.HandleFunc("/cookieTest", usersC.CookieTest).Methods("GET")
+
+	// Gallery routes
+	r.Handle("/galleries/new", galleriesC.New).Methods("GET")
+
 	fmt.Println("Starting the server on port :4000")
 	http.ListenAndServe(":4000", r)
 }
