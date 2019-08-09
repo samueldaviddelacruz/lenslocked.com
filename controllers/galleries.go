@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -39,6 +38,10 @@ func (g *Galleries) Create(w http.ResponseWriter, r *http.Request) {
 	gallery := models.Gallery{
 		Title: form.Title,
 	}
-	fmt.Fprintln(w, gallery)
-
+	if err := g.gs.Create(&gallery); err != nil {
+		log.Println(err)
+		vd.SetAlert(err)
+		g.New.Render(w, vd)
+		return
+	}
 }
