@@ -16,10 +16,34 @@ type GalleryService interface {
 	GalleryDB
 }
 
+type galleryService struct {
+	GalleryDB
+}
+
+func NewGalleryService(db *gorm.DB) GalleryService {
+	return &galleryService{
+		GalleryDB: &galleryValidator{
+			&galleryGorm{db},
+		},
+	}
+}
+
 type GalleryDB interface {
 	Create(gallery *Gallery) error
 }
 
+type galleryValidator struct {
+	GalleryDB
+}
+
+var _ GalleryDB = &galleryGorm{}
+
 type galleryGorm struct {
 	db *gorm.DB
+}
+
+// Create will create the provided gallery and backfill data
+// like the ID, CreatedAt, and UpdatedAt fields.
+func (gg *galleryGorm) Create(gallery *Gallery) error {
+	return gg.db.Create(gallery).Error
 }
