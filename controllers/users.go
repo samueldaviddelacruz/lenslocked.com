@@ -11,12 +11,6 @@ import (
 	"github.com/samueldaviddelacruz/lenslocked.com/views"
 )
 
-type SignupForm struct {
-	Name     string `schema:"name"`
-	Email    string `schema:"email"`
-	Password string `schema:"password"`
-}
-
 // NewUsers is used to create a new Users controller.
 // This function will panic if the templates are not
 // parsed correctly, and should only be used during
@@ -43,6 +37,12 @@ type Users struct {
 func (u *Users) New(w http.ResponseWriter, r *http.Request) {
 
 	u.NewView.Render(w, nil)
+}
+
+type SignupForm struct {
+	Name     string `schema:"name"`
+	Email    string `schema:"email"`
+	Password string `schema:"password"`
 }
 
 // Create is used to process the signup form when a user
