@@ -1,28 +1,71 @@
 package controllers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
 
 	"github.com/samueldaviddelacruz/lenslocked.com/context"
 	"github.com/samueldaviddelacruz/lenslocked.com/models"
 	"github.com/samueldaviddelacruz/lenslocked.com/views"
 )
 
-func NewGalleries(gs models.GalleryService) *Galleries {
+const (
+	ShowGallery = "show_gallery"
+)
+
+func NewGalleries(gs models.GalleryService, router *mux.Router) *Galleries {
 	return &Galleries{
-		New: views.NewView("bootstrap", "galleries/new"),
-		gs:  gs,
+		New:      views.NewView("bootstrap", "galleries/new"),
+		ShowView: views.NewView("bootstrap", "galleries/show"),
+		gs:       gs,
+		router:   router,
 	}
 }
 
 type Galleries struct {
-	New *views.View
-	gs  models.GalleryService
+	New      *views.View
+	ShowView *views.View
+	gs       models.GalleryService
+	router   *mux.Router
 }
 
 type GalleryForm struct {
 	Title string `schema:"title"`
+}
+
+// GET /galleries/:id
+func (g *Galleries) Show(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+	idStr := vars["id"]
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid gallery ID", http.StatusNotFound)
+		return
+	}
+
+	gallery, err := g.gs.ByID(uint(id))
+	if err != nil {
+		switch err {
+		case models.ErrNotFound:
+			http.Error(w, "Gallery not found", http.StatusNotFound)
+
+		default:
+			http.Error(w, "Oops, something went wrong.", http.StatusInternalServerError)
+
+		}
+		return
+
+	}
+	var vd views.Data
+	vd.Yield = gallery
+
+	g.ShowView.Render(w, vd)
+
 }
 
 // POST /galleries
@@ -51,4 +94,12 @@ func (g *Galleries) Create(w http.ResponseWriter, r *http.Request) {
 		g.New.Render(w, vd)
 		return
 	}
+	url, err := g.router.Get(ShowGallery).URL("id", fmt.Sprintf("%v", gallery.ID))
+
+	if err != nil {
+		// TODO: make this go to index page
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+	http.Redirect(w, r, url.Path, http.StatusFound)
 }
