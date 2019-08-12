@@ -17,7 +17,7 @@ func (mw *RequireUser) Apply(next http.Handler) http.HandlerFunc {
 
 func (mw *RequireUser) ApplyFn(next http.HandlerFunc) http.HandlerFunc {
 
-	return func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("remember_token")
 		if err != nil {
 			http.Redirect(w, r, "/login", http.StatusFound)
@@ -36,5 +36,5 @@ func (mw *RequireUser) ApplyFn(next http.HandlerFunc) http.HandlerFunc {
 
 		next(w, r)
 
-	}
+	})
 }
