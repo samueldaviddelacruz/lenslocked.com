@@ -14,3 +14,5 @@
 exp
 #exclude tmp directory
 tmp
+
+images/**
