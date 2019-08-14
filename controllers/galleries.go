@@ -2,10 +2,8 @@ package controllers
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 
 	"github.com/gorilla/mux"
@@ -22,13 +20,14 @@ const (
 	maxMultiPartMem = 1 << 20 // 1 megabyte
 )
 
-func NewGalleries(gs models.GalleryService, router *mux.Router) *Galleries {
+func NewGalleries(gs models.GalleryService, is models.ImageService, router *mux.Router) *Galleries {
 	return &Galleries{
 		New:       views.NewView("bootstrap", "galleries/new"),
 		ShowView:  views.NewView("bootstrap", "galleries/show"),
 		EditView:  views.NewView("bootstrap", "galleries/edit"),
 		IndexView: views.NewView("bootstrap", "galleries/index"),
 		gs:        gs,
+		is:        is,
 		router:    router,
 	}
 }
@@ -39,6 +38,7 @@ type Galleries struct {
 	EditView  *views.View
 	IndexView *views.View
 	gs        models.GalleryService
+	is        models.ImageService
 	router    *mux.Router
 }
 
@@ -214,15 +214,6 @@ func (g *Galleries) ImageUpload(w http.ResponseWriter, r *http.Request) {
 		g.EditView.Render(w, r, vd)
 		return
 	}
-	// Create the directory to contain our images.
-	galleryPath := fmt.Sprintf("images/galleries/%v/", gallery.ID)
-	err = os.MkdirAll(galleryPath, 0755)
-	if err != nil {
-		log.Println(err)
-		vd.SetAlert(err)
-		g.EditView.Render(w, r, vd)
-		return
-	}
 
 	files := r.MultipartForm.File["images"]
 
@@ -236,25 +227,13 @@ func (g *Galleries) ImageUpload(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		defer file.Close()
-		// Create a destination file
-		dst, err := os.Create(galleryPath + f.Filename)
+		err = g.is.Create(gallery.ID, file, f.Filename)
 		if err != nil {
 			log.Println(err)
 			vd.SetAlert(err)
 			g.EditView.Render(w, r, vd)
 			return
 		}
-		defer dst.Close()
-
-		// Copy uploaded file data to the destination file
-		_, err = io.Copy(dst, file)
-		if err != nil {
-			log.Println(err)
-			vd.SetAlert(err)
-			g.EditView.Render(w, r, vd)
-			return
-		}
-
 	}
 	fmt.Fprintln(w, "files succesfully uploaded!")
 }
