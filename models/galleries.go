@@ -13,6 +13,28 @@ type Gallery struct {
 	Images []string `gorm:"-"`
 }
 
+func (g *Gallery) ImageSplitN(n int) [][]string {
+	result := make([][]string, n)
+	for i := 0; i < n; i++ {
+		result[i] = make([]string, 0)
+	}
+	for i, img := range g.Images {
+		// % is the remainder operator in Go
+		// eg:
+		// 0%3 = 0
+		// 1%2 = 1
+		// 2%3 = 2
+
+		// 3%3 = 0
+		// 4%3 = 1
+
+		bucket := i % n
+		result[bucket] = append(result[bucket], img)
+
+	}
+	return result
+}
+
 type GalleryService interface {
 	GalleryDB
 }
