@@ -144,9 +144,10 @@ func (g *Galleries) Delete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Gallery not found", http.StatusNotFound)
 		return
 	}
-	var vd views.Data
+
 	err = g.gs.Delete(gallery.ID)
 	if err != nil {
+		var vd views.Data
 		vd.SetAlert(err)
 		vd.Yield = gallery
 		g.EditView.Render(w, r, vd)
@@ -241,6 +242,43 @@ func (g *Galleries) ImageUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Redirect(w, r, url.Path, http.StatusFound)
+}
+
+// POST /galleries/:id/images/:filename/delete
+func (g *Galleries) ImageDelete(w http.ResponseWriter, r *http.Request) {
+	gallery, err := g.galleryByID(w, r)
+	if err != nil {
+		return
+	}
+	user := context.User(r.Context())
+	if gallery.UserID != user.ID {
+		http.Error(w, "Gallery not found", http.StatusNotFound)
+		return
+	}
+	filename := mux.Vars(r)["filename"]
+
+	i := models.Image{
+		Filename:  filename,
+		GalleryID: gallery.ID,
+	}
+
+	err = g.is.Delete(&i)
+	if err != nil {
+		var vd views.Data
+		vd.Yield = gallery
+
+		vd.SetAlert(err)
+		g.EditView.Render(w, r, vd)
+		return
+	}
+	url, err := g.router.Get(EditGallery).URL("id", fmt.Sprintf("%v", gallery.ID))
+
+	if err != nil {
+		http.Redirect(w, r, "/galleries", http.StatusFound)
+		return
+	}
+	http.Redirect(w, r, url.Path, http.StatusFound)
+
 }
 
 func (g *Galleries) galleryByID(w http.ResponseWriter, r *http.Request) (*models.Gallery, error) {

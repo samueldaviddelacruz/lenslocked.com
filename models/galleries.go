@@ -8,15 +8,15 @@ import (
 // see.
 type Gallery struct {
 	gorm.Model
-	UserID uint     `gorm:"not_null;index"`
-	Title  string   `gorm:"not_null"`
-	Images []string `gorm:"-"`
+	UserID uint    `gorm:"not_null;index"`
+	Title  string  `gorm:"not_null"`
+	Images []Image `gorm:"-"`
 }
 
-func (g *Gallery) ImageSplitN(n int) [][]string {
-	result := make([][]string, n)
+func (g *Gallery) ImageSplitN(n int) [][]Image {
+	result := make([][]Image, n)
 	for i := 0; i < n; i++ {
-		result[i] = make([]string, 0)
+		result[i] = make([]Image, 0)
 	}
 	for i, img := range g.Images {
 		// % is the remainder operator in Go

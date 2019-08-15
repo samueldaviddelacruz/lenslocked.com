@@ -1,6 +1,8 @@
 package views
 
 import (
+	"log"
+
 	"github.com/samueldaviddelacruz/lenslocked.com/models"
 )
 
@@ -43,6 +45,7 @@ func (d *Data) SetAlert(err error) {
 			Message: pErr.Public(),
 		}
 	} else {
+		log.Println(err)
 		d.Alert = &Alert{
 			Level:   AlertLvlError,
 			Message: AlertMsgGeneric,
