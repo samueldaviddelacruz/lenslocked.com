@@ -19,6 +19,7 @@
 
 {{define "loginForm"}}
 <form action="/login" method="POST">
+  {{csrfField}}
    <div class="form-group">
     <label for="email">Email address</label>
     <input type="email" class="form-control" name="email" id="email" placeholder="Email">

@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/samueldaviddelacruz/lenslocked.com/controllers"
 	"github.com/samueldaviddelacruz/lenslocked.com/middleware"
 	"github.com/samueldaviddelacruz/lenslocked.com/models"
+	"github.com/samueldaviddelacruz/lenslocked.com/rand"
 )
 
 const (
@@ -32,6 +34,11 @@ func main() {
 	usersC := controllers.NewUsers(services.User)
 
 	galleriesC := controllers.NewGalleries(services.Gallery, services.Image, r)
+
+	isProd := false
+	bytes, err := rand.Bytes(32)
+	must(err)
+	csrfMw := csrf.Protect(bytes, csrf.Secure(isProd))
 
 	userMw := middleware.User{
 		UserService: services.User,
@@ -75,7 +82,7 @@ func main() {
 
 	r.HandleFunc("/galleries/{id:[0-9]+}/delete", requireUserMw.ApplyFn(galleriesC.Delete)).Methods("POST")
 	fmt.Println("Starting the server on port :4000")
-	http.ListenAndServe(":4000", userMw.Apply(r))
+	http.ListenAndServe(":4000", csrfMw(userMw.Apply(r)))
 }
 
 func must(err error) {
