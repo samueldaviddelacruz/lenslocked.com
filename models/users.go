@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
+
 	"github.com/samueldaviddelacruz/lenslocked.com/hash"
 	"github.com/samueldaviddelacruz/lenslocked.com/rand"
 

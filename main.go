@@ -12,18 +12,10 @@ import (
 	"github.com/samueldaviddelacruz/lenslocked.com/rand"
 )
 
-const (
-	host     = "localhost"
-	port     = 5432
-	user     = "postgres"
-	password = "postgres"
-	dbname   = "lenslocked_dev"
-)
-
 func main() {
-	psqlinfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
-	services, err := models.NewServices(psqlinfo)
+	appCfg := DefaultConfig()
+	postgresConfig := DefaultPostgressConfig()
+	services, err := models.NewServices(postgresConfig.Dialect(), postgresConfig.ConnectionInfo())
 	must(err)
 
 	defer services.Close()
@@ -35,10 +27,10 @@ func main() {
 
 	galleriesC := controllers.NewGalleries(services.Gallery, services.Image, r)
 
-	isProd := false
+	//isProd := false
 	bytes, err := rand.Bytes(32)
 	must(err)
-	csrfMw := csrf.Protect(bytes, csrf.Secure(isProd))
+	csrfMw := csrf.Protect(bytes, csrf.Secure(appCfg.IsProd()))
 
 	userMw := middleware.User{
 		UserService: services.User,
@@ -81,8 +73,9 @@ func main() {
 	r.HandleFunc("/galleries/{id:[0-9]+}/images/{filename}/delete", requireUserMw.ApplyFn(galleriesC.ImageDelete)).Methods("POST")
 
 	r.HandleFunc("/galleries/{id:[0-9]+}/delete", requireUserMw.ApplyFn(galleriesC.Delete)).Methods("POST")
-	fmt.Println("Starting the server on port :4000")
-	http.ListenAndServe(":4000", csrfMw(userMw.Apply(r)))
+	fmt.Printf("Starting the server on port :%d\n", appCfg.Port)
+
+	http.ListenAndServe(fmt.Sprintf(":%d", appCfg.Port), csrfMw(userMw.Apply(r)))
 }
 
 func must(err error) {
