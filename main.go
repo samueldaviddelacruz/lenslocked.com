@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
 
@@ -13,8 +14,11 @@ import (
 )
 
 func main() {
-	appCfg := DefaultConfig()
-	postgresConfig := DefaultPostgressConfig()
+	boolPtr := flag.Bool("prod", false,
+		"Provide this flag in production. This ensures that a config.json file is provided before the application starts")
+	flag.Parse()
+	appCfg := LoadConfig(*boolPtr)
+	postgresConfig := appCfg.Database
 
 	services, err := models.NewServices(
 		models.WithGorm(
