@@ -5,19 +5,73 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
-func NewServices(dialect, connectionInfo string) (*Services, error) {
-	db, err := gorm.Open(dialect, connectionInfo)
-	if err != nil {
-		return nil, err
-	}
-	db.LogMode(true)
+type ServicesConfig func(*Services) error
 
-	return &Services{
-		User:    NewUserService(db),
-		Gallery: NewGalleryService(db),
-		Image:   NewImageService(),
-		db:      db,
-	}, nil
+func WithGorm(dialect, connectionInfo string) ServicesConfig {
+	return func(s *Services) error {
+		db, err := gorm.Open(dialect, connectionInfo)
+		if err != nil {
+			return err
+		}
+		//db.LogMode(true)
+		s.db = db
+		return nil
+	}
+}
+
+func WithUser(pepper, hmacKey string) ServicesConfig {
+
+	return func(s *Services) error {
+
+		s.User = NewUserService(s.db, pepper, hmacKey)
+		return nil
+	}
+}
+
+func WithGallery() ServicesConfig {
+
+	return func(s *Services) error {
+		s.Gallery = NewGalleryService(s.db)
+		return nil
+	}
+}
+
+func WithImage() ServicesConfig {
+	return func(s *Services) error {
+		s.Image = NewImageService()
+		return nil
+	}
+}
+func WithLogMode(logMode bool) ServicesConfig {
+	return func(s *Services) error {
+		s.db.LogMode(logMode)
+		return nil
+	}
+}
+
+func NewServices(cfgs ...ServicesConfig) (*Services, error) {
+	var s Services
+	for _, cfg := range cfgs {
+		if err := cfg(&s); err != nil {
+			return nil, err
+		}
+	}
+
+	return &s, nil
+	/*
+		db, err := gorm.Open(dialect, connectionInfo)
+		if err != nil {
+			return nil, err
+		}
+		db.LogMode(true)
+
+		return &Services{
+			User:    NewUserService(db),
+			Gallery: NewGalleryService(db),
+			Image:   NewImageService(),
+			db:      db,
+		}, nil
+	*/
 }
 
 type Services struct {

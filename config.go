@@ -34,14 +34,18 @@ func DefaultPostgressConfig() PostgressConfig {
 }
 
 type Config struct {
-	Port int
-	Env  string
+	Port    int    `json:"port"`
+	Env     string `json:"env"`
+	Pepper  string `json:"pepper"`
+	HMACKey string `json:"hmacKey"`
 }
 
 func DefaultConfig() Config {
 	return Config{
-		Port: 4000,
-		Env:  "dev",
+		Port:    4000,
+		Env:     "dev",
+		Pepper:  "mUGD8rTdJe",
+		HMACKey: "the-secret-key",
 	}
 }
 
@@ -53,7 +57,7 @@ func (c Config) IsProd() bool {
 
 
 
-
+db, err := gorm.Open(dialect, connectionInfo)
 const userPwPepper = "mUGD8rTdJe"
 const hmacSecretKey = "the-secret-key"
 

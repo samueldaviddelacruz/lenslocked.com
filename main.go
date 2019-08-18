@@ -15,7 +15,16 @@ import (
 func main() {
 	appCfg := DefaultConfig()
 	postgresConfig := DefaultPostgressConfig()
-	services, err := models.NewServices(postgresConfig.Dialect(), postgresConfig.ConnectionInfo())
+
+	services, err := models.NewServices(
+		models.WithGorm(
+			postgresConfig.Dialect(),
+			postgresConfig.ConnectionInfo()),
+		models.WithLogMode(!appCfg.IsProd()),
+		models.WithUser(appCfg.Pepper, appCfg.HMACKey),
+		models.WithGallery(),
+		models.WithImage(),
+	)
 	must(err)
 
 	defer services.Close()
@@ -27,7 +36,6 @@ func main() {
 
 	galleriesC := controllers.NewGalleries(services.Gallery, services.Image, r)
 
-	//isProd := false
 	bytes, err := rand.Bytes(32)
 	must(err)
 	csrfMw := csrf.Protect(bytes, csrf.Secure(appCfg.IsProd()))
