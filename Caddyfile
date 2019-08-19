@@ -1,7 +1,7 @@
-lenslocked-project-demo.net{
-    gzip
-    proxy / localhost:4000{
+lenslocked-project-demo.net {
+  proxy / localhost:4000 {
         transparent
     }
+  gzip
 }
 
