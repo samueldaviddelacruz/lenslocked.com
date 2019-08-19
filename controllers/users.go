@@ -2,7 +2,9 @@ package controllers
 
 import (
 	"net/http"
+	"time"
 
+	"github.com/samueldaviddelacruz/lenslocked.com/context"
 	"github.com/samueldaviddelacruz/lenslocked.com/models"
 	"github.com/samueldaviddelacruz/lenslocked.com/rand"
 
@@ -114,6 +116,26 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/galleries", http.StatusFound)
 }
 
+// Logout is used to delete a users session cookie (remember_token)
+// and then will update the user resource with a new remember
+// token.
+// POST /logout
+func (u *Users) Logout(w http.ResponseWriter, r *http.Request) {
+	cookie := http.Cookie{
+		Name:     "remember_token",
+		Value:    "",
+		Expires:  time.Now(),
+		HttpOnly: true,
+	}
+	http.SetCookie(w, &cookie)
+
+	user := context.User(r.Context())
+	token, _ := rand.RememberToken()
+	user.Remember = token
+	u.us.Update(user)
+	http.Redirect(w, r, "/", http.StatusFound)
+}
+
 // signIn is used to sign the given user via cookies.
 func (u *Users) signIn(w http.ResponseWriter, user *models.User) error {
 	if user.Remember == "" {
@@ -138,21 +160,3 @@ func (u *Users) signIn(w http.ResponseWriter, user *models.User) error {
 
 	return nil
 }
-
-/*
-// CookieTest is used to display cookies set on the current user
-func (u *Users) CookieTest(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("remember_token")
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusFound)
-		return
-	}
-
-	user, err := u.us.ByRemember(cookie.Value)
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusFound)
-		return
-	}
-	fmt.Fprintln(w, user)
-}
-*/
