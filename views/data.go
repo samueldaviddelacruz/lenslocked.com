@@ -2,6 +2,8 @@ package views
 
 import (
 	"log"
+	"net/http"
+	"time"
 
 	"github.com/samueldaviddelacruz/lenslocked.com/models"
 )
@@ -51,6 +53,70 @@ func (d *Data) SetAlert(err error) {
 			Message: AlertMsgGeneric,
 		}
 	}
+}
+
+func persistAlert(w http.ResponseWriter, alert Alert) {
+	expiresAt := time.Now().Add(5 * time.Minute)
+	lvl := http.Cookie{
+		Name:     "alert_level",
+		Value:    alert.Level,
+		Expires:  expiresAt,
+		HttpOnly: true,
+	}
+	message := http.Cookie{
+		Name:     "alert_message",
+		Value:    alert.Message,
+		Expires:  expiresAt,
+		HttpOnly: true,
+	}
+	http.SetCookie(w, &lvl)
+	http.SetCookie(w, &message)
+}
+
+func clearAlert(w http.ResponseWriter) {
+
+	lvl := http.Cookie{
+		Name:     "alert_level",
+		Value:    "",
+		Expires:  time.Now(),
+		HttpOnly: true,
+	}
+	message := http.Cookie{
+		Name:     "alert_message",
+		Value:    "",
+		Expires:  time.Now(),
+		HttpOnly: true,
+	}
+	http.SetCookie(w, &lvl)
+	http.SetCookie(w, &message)
+}
+
+func getAlert(r *http.Request) *Alert {
+	lvl, err := r.Cookie("alert_level")
+	if err != nil {
+		return nil
+	}
+	message, err := r.Cookie("alert_message")
+	if err != nil {
+		return nil
+	}
+	alert := Alert{
+		Level:   lvl.Value,
+		Message: message.Value,
+	}
+
+	return &alert
+
+}
+
+// RedirectAlert accepts all the normal params for an
+// http.Redirect and performs a redirect, but only after
+// persisting the provided alert in a cookie so that it can
+// be displayed when the new page is loaded.
+func RedirectAlert(w http.ResponseWriter, r *http.Request, urlStr string, code int, alert Alert) {
+
+	persistAlert(w, alert)
+	http.Redirect(w, r, urlStr, code)
 }
 
 type PublicError interface {
