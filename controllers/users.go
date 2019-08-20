@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/samueldaviddelacruz/lenslocked.com/email"
+
 	"github.com/samueldaviddelacruz/lenslocked.com/context"
 	"github.com/samueldaviddelacruz/lenslocked.com/models"
 	"github.com/samueldaviddelacruz/lenslocked.com/rand"
@@ -15,11 +17,12 @@ import (
 // This function will panic if the templates are not
 // parsed correctly, and should only be used during
 // initial setup
-func NewUsers(us models.UserService) *Users {
+func NewUsers(us models.UserService, emailer *email.Client) *Users {
 	return &Users{
 		LoginView: views.NewView("bootstrap", "users/login"),
 		NewView:   views.NewView("bootstrap", "users/new"),
 		us:        us,
+		emailer:   emailer,
 	}
 }
 
@@ -28,6 +31,7 @@ type Users struct {
 	NewView   *views.View
 	LoginView *views.View
 	us        models.UserService
+	emailer   *email.Client
 }
 
 // New is used to render the form where a user can
@@ -74,6 +78,7 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
+	u.emailer.Welcome(user.Name, user.Email)
 	alert := views.Alert{
 		Level:   views.AlertLvlSuccess,
 		Message: "Welcome to LensLocked.com",

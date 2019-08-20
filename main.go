@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/samueldaviddelacruz/lenslocked.com/controllers"
+	"github.com/samueldaviddelacruz/lenslocked.com/email"
 	"github.com/samueldaviddelacruz/lenslocked.com/middleware"
 	"github.com/samueldaviddelacruz/lenslocked.com/models"
 	"github.com/samueldaviddelacruz/lenslocked.com/rand"
@@ -34,9 +35,16 @@ func main() {
 	defer services.Close()
 	//must(services.DestructiveReset())
 	must(services.AutoMigrate())
+
+	mgCfg := appCfg.Mailgun
+	emailer := email.NewClient(
+		email.WithSender("Lenslocked.com Support", "support@sandboxddba781be75b455ea3313563bb0b74b2.mailgun.org"),
+		email.WithMailgun(mgCfg.Domain, mgCfg.APIKey, mgCfg.PublicAPIKEY),
+	)
+
 	r := mux.NewRouter()
 	staticC := controllers.NewStatic()
-	usersC := controllers.NewUsers(services.User)
+	usersC := controllers.NewUsers(services.User, emailer)
 
 	galleriesC := controllers.NewGalleries(services.Gallery, services.Image, r)
 

@@ -43,6 +43,7 @@ type Config struct {
 	Pepper   string          `json:"pepper"`
 	HMACKey  string          `json:"hmacKey"`
 	Database PostgressConfig `json:"database"`
+	Mailgun  MailgunConfig   `json:"mailgun"`
 }
 
 func DefaultConfig() Config {
@@ -79,13 +80,8 @@ func LoadConfig(configRequired bool) Config {
 	return c
 }
 
-/*
-
-
-
-db, err := gorm.Open(dialect, connectionInfo)
-const userPwPepper = "mUGD8rTdJe"
-const hmacSecretKey = "the-secret-key"
-
-db.LogMode(true)
-*/
+type MailgunConfig struct {
+	APIKey       string `json:"api_key"`
+	PublicAPIKEY string `json:"public_api_key_key"`
+	Domain       string `json:"domain"`
+}
