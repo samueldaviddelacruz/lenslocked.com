@@ -31,6 +31,8 @@ const (
 	ErrPasswordRequired modelError = "models: password is required"
 	ErrTitleRequired    modelError = "models: title is required"
 
+	ErrPwResetInvalid modelError = "models: token provided is not valid"
+
 	// ErrRememberTooShort is returned when a remember token is
 	// not at least 32 bytes
 	ErrRememberTooShort privateError = "models: Remember token must be at least 32 bytes"
