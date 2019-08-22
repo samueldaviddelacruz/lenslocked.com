@@ -33,12 +33,12 @@ func main() {
 	must(err)
 
 	defer services.Close()
-	//must(services.DestructiveReset())
+	must(services.DestructiveReset())
 	must(services.AutoMigrate())
 
 	mgCfg := appCfg.Mailgun
 	emailer := email.NewClient(
-		email.WithSender("Lenslocked.com Support", "support@sandboxddba781be75b455ea3313563bb0b74b2.mailgun.org"),
+		email.WithSender("lenslocked-project-demo.net Support", "support@sandboxddba781be75b455ea3313563bb0b74b2.mailgun.org"),
 		email.WithMailgun(mgCfg.Domain, mgCfg.APIKey, mgCfg.PublicAPIKEY),
 	)
 

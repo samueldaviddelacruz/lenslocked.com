@@ -87,7 +87,7 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 	u.emailer.Welcome(user.Name, user.Email)
 	alert := views.Alert{
 		Level:   views.AlertLvlSuccess,
-		Message: "Welcome to LensLocked.com",
+		Message: "Welcome to lenslocked-project-demo.net",
 	}
 	views.RedirectAlert(w, r, "/galleries", http.StatusFound, alert)
 }

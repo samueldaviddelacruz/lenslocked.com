@@ -3,7 +3,7 @@
 # Change to the directory with our code that we plan to work from 
 cd "$GOPATH/src/github.com/samueldaviddelacruz/lenslocked.com"
 
-echo "==== Releasing lenslocked.com ===="
+echo "==== Releasing lenslocked-project-demo.net ===="
 echo " Deleting the local binary if it exists (so it isn't uploaded)..."
 rm lenslocked.com
 echo " Done!"

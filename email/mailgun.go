@@ -12,7 +12,7 @@ import (
 const (
 	welcomeSubject = "Welcome to Lenslocked.net"
 	resetSubject   = "Instructions for resetting your password."
-	resetBaseURL   = "lenslocked-project-demo.net/reset"
+	resetBaseURL   = "https://lenslocked-project-demo.net/reset"
 )
 const welcomeText = `
 Hi there!
