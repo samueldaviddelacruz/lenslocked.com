@@ -35,6 +35,9 @@ ssh root@lenslocked-project-demo.net "export GOPATH=/root/go; \
 ssh root@lenslocked-project-demo.net "export GOPATH=/root/go; \
 /usr/local/go/bin/go get github.com/gorilla/csrf"
 
+ssh root@lenslocked-project-demo.net "export GOPATH=/root/go; \
+/usr/local/go/bin/go get gopkg.in/mailgun/mailgun-go.v3"
+
 echo " Building the code on remote server..."
 ssh root@lenslocked-project-demo.net 'export GOPATH=/root/go; \
 cd /root/app; \
