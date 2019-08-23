@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
@@ -12,6 +14,7 @@ import (
 	"github.com/samueldaviddelacruz/lenslocked.com/middleware"
 	"github.com/samueldaviddelacruz/lenslocked.com/models"
 	"github.com/samueldaviddelacruz/lenslocked.com/rand"
+	"golang.org/x/oauth2"
 )
 
 func main() {
@@ -33,7 +36,7 @@ func main() {
 	must(err)
 
 	defer services.Close()
-	must(services.DestructiveReset())
+	//must(services.DestructiveReset())
 	must(services.AutoMigrate())
 
 	mgCfg := appCfg.Mailgun
@@ -58,6 +61,56 @@ func main() {
 	requireUserMw := middleware.RequireUser{
 		User: userMw,
 	}
+
+	dbxOAuth := &oauth2.Config{
+		ClientID:     appCfg.Dropbox.ID,
+		ClientSecret: appCfg.Dropbox.Secret,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  appCfg.Dropbox.AuthURL,
+			TokenURL: appCfg.Dropbox.TokenURL,
+		},
+		RedirectURL: "http://localhost:4000/oauth/dropbox/callback",
+	}
+
+	dbxReredirect := func(w http.ResponseWriter, r *http.Request) {
+		state := csrf.Token(r)
+		cookie := http.Cookie{
+			Name:     "oauth_state",
+			Value:    state,
+			HttpOnly: true,
+		}
+		http.SetCookie(w, &cookie)
+
+		url := dbxOAuth.AuthCodeURL(state)
+		http.Redirect(w, r, url, http.StatusFound)
+	}
+	dbxCallback := func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		state := r.FormValue("state")
+		cookie, err := r.Cookie("oauth_state")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		} else if cookie == nil || cookie.Value != state {
+			http.Error(w, "Invalid state provided", http.StatusBadRequest)
+			return
+		}
+
+		cookie.Value = ""
+		cookie.Expires = time.Now()
+		http.SetCookie(w, cookie)
+		code := r.FormValue("code")
+		token, err := dbxOAuth.Exchange(context.TODO(), code)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		fmt.Fprintf(w, "%+v", token)
+	}
+
+	r.HandleFunc("/oauth/dropbox/connect", dbxReredirect)
+	r.HandleFunc("/oauth/dropbox/callback", dbxCallback)
 
 	r.Handle("/", staticC.Home).Methods("GET")
 	r.Handle("/contact", staticC.Contact).Methods("GET")

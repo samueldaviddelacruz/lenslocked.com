@@ -10,13 +10,13 @@ import (
 )
 
 const (
-	welcomeSubject = "Welcome to Lenslocked.net"
+	welcomeSubject = "Welcome to Lenslocked Project Demo"
 	resetSubject   = "Instructions for resetting your password."
 	resetBaseURL   = "https://lenslocked-project-demo.net/reset"
 )
 const welcomeText = `
 Hi there!
-Welcome to Lenslocked.net! we really hope you enjoy using
+Welcome to lenslocked-project-demo.net! we really hope you enjoy using
 our application!
 
 Best,
@@ -26,12 +26,11 @@ Samy
 
 const welcomeHTML = `
 Hi there!<br/>
-Welcome to Lenslocked.net! we really hope you enjoy using
+Welcome to lenslocked-project-demo.net! we really hope you enjoy using
 our application!
 <br/>
 Best,<br/>
 Samy
-
 `
 const resetTextTmpl = `
 	Hi there!
