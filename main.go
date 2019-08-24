@@ -32,13 +32,19 @@ func main() {
 		models.WithUser(appCfg.Pepper, appCfg.HMACKey),
 		models.WithGallery(),
 		models.WithImage(),
+		models.WithOAuth(),
 	)
 	must(err)
 
 	defer services.Close()
 	//must(services.DestructiveReset())
 	must(services.AutoMigrate())
-
+	_, err = services.OAuth.Find(1, "dropbox")
+	if err == nil {
+		panic("expected ErrNotFound")
+	} else {
+		fmt.Println("No OAuth token found!")
+	}
 	mgCfg := appCfg.Mailgun
 	emailer := email.NewClient(
 		email.WithSender("lenslocked-project-demo.net Support", "support@sandboxddba781be75b455ea3313563bb0b74b2.mailgun.org"),

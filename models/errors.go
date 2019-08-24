@@ -45,6 +45,8 @@ const (
 	// ErrIDInvalid is returned when an invalid ID is provided
 	// to a method like Delete.
 	ErrIDInvalid privateError = "models: ID provided was invalid"
+
+	ErrServiceRequired privateError = "models: service is required"
 )
 
 type modelError string

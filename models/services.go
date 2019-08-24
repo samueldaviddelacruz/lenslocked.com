@@ -42,6 +42,14 @@ func WithImage() ServicesConfig {
 		return nil
 	}
 }
+
+func WithOAuth() ServicesConfig {
+	return func(s *Services) error {
+
+		s.OAuth = NewOAuthService(s.db)
+		return nil
+	}
+}
 func WithLogMode(logMode bool) ServicesConfig {
 	return func(s *Services) error {
 		s.db.LogMode(logMode)
@@ -65,6 +73,7 @@ type Services struct {
 	Gallery GalleryService
 	Image   ImageService
 	User    UserService
+	OAuth   OAuthService
 	db      *gorm.DB
 }
 
@@ -76,12 +85,12 @@ func (s *Services) Close() error {
 // AutoMigrate will attempt to automatically migrate the
 // all tables
 func (s *Services) AutoMigrate() error {
-	return s.db.AutoMigrate(&User{}, &Gallery{}, &pwReset{}).Error
+	return s.db.AutoMigrate(&User{}, &Gallery{}, &pwReset{}, &OAuth{}).Error
 }
 
 // DestructiveReset drops the all tables and rebuilds them
 func (s *Services) DestructiveReset() error {
-	err := s.db.DropTableIfExists(&User{}, &Gallery{}, &pwReset{}).Error
+	err := s.db.DropTableIfExists(&User{}, &Gallery{}, &pwReset{}, &OAuth{}).Error
 	if err != nil {
 		return err
 	}
