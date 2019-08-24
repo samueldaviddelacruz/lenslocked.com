@@ -1,11 +1,9 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
@@ -18,6 +16,7 @@ import (
 )
 
 func main() {
+
 	boolPtr := flag.Bool("prod", false,
 		"Provide this flag in production. This ensures that a config.json file is provided before the application starts")
 	flag.Parse()
@@ -39,12 +38,7 @@ func main() {
 	defer services.Close()
 	//must(services.DestructiveReset())
 	must(services.AutoMigrate())
-	_, err = services.OAuth.Find(1, "dropbox")
-	if err == nil {
-		panic("expected ErrNotFound")
-	} else {
-		fmt.Println("No OAuth token found!")
-	}
+
 	mgCfg := appCfg.Mailgun
 	emailer := email.NewClient(
 		email.WithSender("lenslocked-project-demo.net Support", "support@sandboxddba781be75b455ea3313563bb0b74b2.mailgun.org"),
@@ -56,18 +50,6 @@ func main() {
 	usersC := controllers.NewUsers(services.User, emailer)
 
 	galleriesC := controllers.NewGalleries(services.Gallery, services.Image, r)
-
-	bytes, err := rand.Bytes(32)
-	must(err)
-	csrfMw := csrf.Protect(bytes, csrf.Secure(appCfg.IsProd()))
-
-	userMw := middleware.User{
-		UserService: services.User,
-	}
-	requireUserMw := middleware.RequireUser{
-		User: userMw,
-	}
-
 	dbxOAuth := &oauth2.Config{
 		ClientID:     appCfg.Dropbox.ID,
 		ClientSecret: appCfg.Dropbox.Secret,
@@ -78,45 +60,22 @@ func main() {
 		RedirectURL: "http://localhost:4000/oauth/dropbox/callback",
 	}
 
-	dbxReredirect := func(w http.ResponseWriter, r *http.Request) {
-		state := csrf.Token(r)
-		cookie := http.Cookie{
-			Name:     "oauth_state",
-			Value:    state,
-			HttpOnly: true,
-		}
-		http.SetCookie(w, &cookie)
+	oauthC := controllers.NewAuths(services.OAuth, dbxOAuth)
+	randBytes, err := rand.Bytes(32)
+	must(err)
+	csrfMw := csrf.Protect(randBytes, csrf.Secure(appCfg.IsProd()))
 
-		url := dbxOAuth.AuthCodeURL(state)
-		http.Redirect(w, r, url, http.StatusFound)
+	userMw := middleware.User{
+		UserService: services.User,
 	}
-	dbxCallback := func(w http.ResponseWriter, r *http.Request) {
-		r.ParseForm()
-		state := r.FormValue("state")
-		cookie, err := r.Cookie("oauth_state")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		} else if cookie == nil || cookie.Value != state {
-			http.Error(w, "Invalid state provided", http.StatusBadRequest)
-			return
-		}
-
-		cookie.Value = ""
-		cookie.Expires = time.Now()
-		http.SetCookie(w, cookie)
-		code := r.FormValue("code")
-		token, err := dbxOAuth.Exchange(context.TODO(), code)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		fmt.Fprintf(w, "%+v", token)
+	requireUserMw := middleware.RequireUser{
+		User: userMw,
 	}
+	// Ouauth Routes
+	r.HandleFunc("/oauth/dropbox/test", requireUserMw.ApplyFn(oauthC.DropboxTest))
 
-	r.HandleFunc("/oauth/dropbox/connect", dbxReredirect)
-	r.HandleFunc("/oauth/dropbox/callback", dbxCallback)
+	r.HandleFunc("/oauth/dropbox/connect", requireUserMw.ApplyFn(oauthC.DropboxConnect))
+	r.HandleFunc("/oauth/dropbox/callback", requireUserMw.ApplyFn(oauthC.DropboxCallback))
 
 	r.Handle("/", staticC.Home).Methods("GET")
 	r.Handle("/contact", staticC.Contact).Methods("GET")
