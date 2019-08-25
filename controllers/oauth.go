@@ -1,35 +1,43 @@
 package controllers
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"time"
 
+	"github.com/gorilla/mux"
+
 	llctx "github.com/samueldaviddelacruz/lenslocked.com/context"
+	"github.com/samueldaviddelacruz/lenslocked.com/dbx"
 
 	"github.com/gorilla/csrf"
 	"github.com/samueldaviddelacruz/lenslocked.com/models"
 	"golang.org/x/oauth2"
 )
 
-func NewAuths(os models.OAuthService, dbxOAuth *oauth2.Config) *Oauths {
+func NewAuths(os models.OAuthService, configs map[string]*oauth2.Config) *Oauths {
 	return &Oauths{
-		os:       os,
-		dbxOAuth: dbxOAuth,
+		os: os,
+
+		configs: configs,
 	}
 }
 
 // Users Represents a Users controller
 type Oauths struct {
-	os       models.OAuthService
-	dbxOAuth *oauth2.Config
+	os      models.OAuthService
+	configs map[string]*oauth2.Config
 }
 
-func (o *Oauths) DropboxConnect(w http.ResponseWriter, r *http.Request) {
+func (o *Oauths) Connect(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	service := vars["service"]
+	oauthConfig, ok := o.configs[service]
+	if !ok {
+		http.Error(w, "Invalid OAuth2 Service", http.StatusBadRequest)
+		return
+	}
 	state := csrf.Token(r)
 	cookie := http.Cookie{
 		Name:     "oauth_state",
@@ -38,11 +46,18 @@ func (o *Oauths) DropboxConnect(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, &cookie)
 
-	url := o.dbxOAuth.AuthCodeURL(state)
+	url := oauthConfig.AuthCodeURL(state)
 	http.Redirect(w, r, url, http.StatusFound)
 }
 
-func (o *Oauths) DropboxCallback(w http.ResponseWriter, r *http.Request) {
+func (o *Oauths) Callback(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	service := vars["service"]
+	oauthConfig, ok := o.configs[service]
+	if !ok {
+		http.Error(w, "Invalid OAuth2 Service", http.StatusBadRequest)
+		return
+	}
 
 	r.ParseForm()
 	state := r.FormValue("state")
@@ -59,10 +74,11 @@ func (o *Oauths) DropboxCallback(w http.ResponseWriter, r *http.Request) {
 	cookie.Expires = time.Now()
 	http.SetCookie(w, cookie)
 	code := r.FormValue("code")
-	token, err := o.dbxOAuth.Exchange(context.TODO(), code)
+
+	token, err := oauthConfig.Exchange(context.TODO(), code)
 
 	user := llctx.User(r.Context())
-	existing, err := o.os.Find(user.ID, models.OauthDropbox)
+	existing, err := o.os.Find(user.ID, service)
 	if err == models.ErrNotFound {
 
 	} else if err != nil {
@@ -75,7 +91,7 @@ func (o *Oauths) DropboxCallback(w http.ResponseWriter, r *http.Request) {
 	userOAuth := models.OAuth{
 		UserID:  user.ID,
 		Token:   *token,
-		Service: models.OauthDropbox,
+		Service: service,
 	}
 	err = o.os.Create(&userOAuth)
 	if err != nil {
@@ -86,38 +102,23 @@ func (o *Oauths) DropboxCallback(w http.ResponseWriter, r *http.Request) {
 }
 
 func (o *Oauths) DropboxTest(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	service := vars["service"]
+
 	r.ParseForm()
 	path := r.FormValue("path")
 
 	user := llctx.User(r.Context())
-	userOath, err := o.os.Find(user.ID, models.OauthDropbox)
+	userOath, err := o.os.Find(user.ID, service)
 	if err != nil {
 		panic(err)
 	}
 	token := userOath.Token
-	dropBoxQuery := struct {
-		Path string `json:"path"`
-	}{
-		Path: path,
-	}
-	dropBoxQueryBytes, err := json.Marshal(dropBoxQuery)
+	folders, files, err := dbx.List(token.AccessToken, path)
 	if err != nil {
 		panic(err)
 	}
-
-	client := o.dbxOAuth.Client(context.TODO(), &token)
-	req, err := http.NewRequest(http.MethodPost, "https://api.dropboxapi.com/2/files/list_folder",
-		bytes.NewReader(dropBoxQueryBytes),
-	)
-	if err != nil {
-		panic(err)
-	}
-	req.Header.Add("Content-Type", "application/json")
-	resp, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-	io.Copy(w, resp.Body)
+	fmt.Fprintln(w, "Folders=", folders)
+	fmt.Fprintln(w, "Files=", files)
 
 }

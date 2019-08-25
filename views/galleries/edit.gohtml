@@ -28,6 +28,12 @@
   <div class="col-md-12">
     {{template "uploadImageForm" .}}
   </div>
+  
+</div>
+<div class="row">
+    <div class="col-md-10 col-md-offset-1" id="dropbox-button-container">
+        {{template "dropBoxImageForm" .}}
+      </div>
 </div>
 
 <div class="row">
@@ -43,6 +49,36 @@
 </div>
 
 {{end}}
+
+{{define "javascript-footer"}}
+  <script type="text/javascript" src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key="7pjwj8jmod77j3y"></script>
+<script>
+const dbxForm = document.getElementById("dropBoxImageForm")
+
+const options = {
+// Required. Called when a user selects an item in the Chooser.
+success: function(files) {
+    files.forEach((file) => {
+      let input = document.createElement("input")
+      input.type="hidden"
+      input.name="files"
+      input.value = file.link
+      dbxForm.appendChild(input)
+    })
+    dbxForm.submit()
+},
+linkType: "direct", // or "direct"
+multiselect: true, // or true
+extensions: ['images'],
+folderselect: false // or true
+};
+const button = Dropbox.createChooseButton(options);
+document.getElementById("dropbox-button-container").appendChild(button);
+
+</script>
+
+
+  {{end}}
 
 {{define "editGalleryForm"}}
 <form action="/galleries/{{.ID}}/update" method="POST" class="form-horizontal">
@@ -71,6 +107,14 @@
   </div>
 </form>
 {{end}}
+
+{{define "dropBoxImageForm"}}
+<form id="dropBoxImageForm" action="/galleries/{{.ID}}/images/link" method="POST" class="form-horizontal" enctype="multipart/form-data">
+  {{csrfField}}
+</form>
+{{end}}
+
+
 
 {{define "uploadImageForm"}}
 <form action="/galleries/{{.ID}}/images" method="POST" class="form-horizontal" enctype="multipart/form-data">

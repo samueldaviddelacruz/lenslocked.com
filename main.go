@@ -50,7 +50,8 @@ func main() {
 	usersC := controllers.NewUsers(services.User, emailer)
 
 	galleriesC := controllers.NewGalleries(services.Gallery, services.Image, r)
-	dbxOAuth := &oauth2.Config{
+	oauthConfigs := make(map[string]*oauth2.Config)
+	oauthConfigs[models.OauthDropbox] = &oauth2.Config{
 		ClientID:     appCfg.Dropbox.ID,
 		ClientSecret: appCfg.Dropbox.Secret,
 		Endpoint: oauth2.Endpoint{
@@ -60,7 +61,7 @@ func main() {
 		RedirectURL: "http://localhost:4000/oauth/dropbox/callback",
 	}
 
-	oauthC := controllers.NewAuths(services.OAuth, dbxOAuth)
+	oauthC := controllers.NewAuths(services.OAuth, oauthConfigs)
 	randBytes, err := rand.Bytes(32)
 	must(err)
 	csrfMw := csrf.Protect(randBytes, csrf.Secure(appCfg.IsProd()))
@@ -72,10 +73,10 @@ func main() {
 		User: userMw,
 	}
 	// Ouauth Routes
-	r.HandleFunc("/oauth/dropbox/test", requireUserMw.ApplyFn(oauthC.DropboxTest))
 
-	r.HandleFunc("/oauth/dropbox/connect", requireUserMw.ApplyFn(oauthC.DropboxConnect))
-	r.HandleFunc("/oauth/dropbox/callback", requireUserMw.ApplyFn(oauthC.DropboxCallback))
+	r.HandleFunc("/oauth/{service:[a-z]+}/connect", requireUserMw.ApplyFn(oauthC.Connect))
+	r.HandleFunc("/oauth/{service:[a-z]+}/callback", requireUserMw.ApplyFn(oauthC.Callback))
+	r.HandleFunc("/oauth/{service:[a-z]+}/test", requireUserMw.ApplyFn(oauthC.DropboxTest))
 
 	r.Handle("/", staticC.Home).Methods("GET")
 	r.Handle("/contact", staticC.Contact).Methods("GET")
@@ -112,7 +113,10 @@ func main() {
 
 	r.HandleFunc("/galleries/{id:[0-9]+}/edit", requireUserMw.ApplyFn(galleriesC.Edit)).Methods("GET").Name(controllers.EditGallery)
 	r.HandleFunc("/galleries/{id:[0-9]+}/update", requireUserMw.ApplyFn(galleriesC.Update)).Methods("POST")
+
 	r.HandleFunc("/galleries/{id:[0-9]+}/images", requireUserMw.ApplyFn(galleriesC.ImageUpload)).Methods("POST")
+	//galleries/:id/images/link
+	r.HandleFunc("/galleries/{id:[0-9]+}/images/link", requireUserMw.ApplyFn(galleriesC.ImageViaLink)).Methods("POST")
 
 	// POST /galleries/:id/images/:filename/delete
 	r.HandleFunc("/galleries/{id:[0-9]+}/images/{filename}/delete", requireUserMw.ApplyFn(galleriesC.ImageDelete)).Methods("POST")
