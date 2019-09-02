@@ -9,5 +9,16 @@
     "user": "your-db-user",
     "password": "your-db-password",
     "dbname": "your-db-name"
+  },
+  "mailgun":{
+    "api_key":"",
+    "domain":""
+  },
+  "dropbox":{
+    "id":"app_id",
+    "secret":"app_secret",
+    "auth_url":"",
+    "token_url":"",
+    "redirect_url":"http://localhost:4000/oauth/dropbox/callback"
   }
 }

@@ -82,14 +82,14 @@ func LoadConfig(configRequired bool) Config {
 }
 
 type MailgunConfig struct {
-	APIKey       string `json:"api_key"`
-	PublicAPIKEY string `json:"public_api_key_key"`
-	Domain       string `json:"domain"`
+	APIKey string `json:"api_key"`
+	Domain string `json:"domain"`
 }
 
 type OAuthConfig struct {
-	ID       string `json:"id"`
-	Secret   string `json:"secret"`
-	AuthURL  string `json:"auth_url"`
-	TokenURL string `json:"token_url"`
+	ID          string `json:"id"`
+	Secret      string `json:"secret"`
+	AuthURL     string `json:"auth_url"`
+	TokenURL    string `json:"token_url"`
+	RedirectURL string `json:"redirect_url"`
 }

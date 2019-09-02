@@ -42,7 +42,7 @@ func main() {
 	mgCfg := appCfg.Mailgun
 	emailer := email.NewClient(
 		email.WithSender("lenslocked-project-demo.net Support", "support@sandboxddba781be75b455ea3313563bb0b74b2.mailgun.org"),
-		email.WithMailgun(mgCfg.Domain, mgCfg.APIKey, mgCfg.PublicAPIKEY),
+		email.WithMailgun(mgCfg.Domain, mgCfg.APIKey),
 	)
 
 	r := mux.NewRouter()
@@ -58,7 +58,7 @@ func main() {
 			AuthURL:  appCfg.Dropbox.AuthURL,
 			TokenURL: appCfg.Dropbox.TokenURL,
 		},
-		RedirectURL: "http://localhost:4000/oauth/dropbox/callback",
+		RedirectURL: appCfg.Dropbox.RedirectURL,
 	}
 
 	oauthC := controllers.NewAuths(services.OAuth, oauthConfigs)

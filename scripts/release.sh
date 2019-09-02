@@ -34,9 +34,16 @@ ssh root@lenslocked-project-demo.net "export GOPATH=/root/go; \
 /usr/local/go/bin/go get github.com/jinzhu/gorm"
 ssh root@lenslocked-project-demo.net "export GOPATH=/root/go; \
 /usr/local/go/bin/go get github.com/gorilla/csrf"
-
 ssh root@lenslocked-project-demo.net "export GOPATH=/root/go; \
 /usr/local/go/bin/go get gopkg.in/mailgun/mailgun-go.v3"
+
+ssh root@lenslocked-project-demo.net "export GOPATH=/root/go; \
+/usr/local/go/bin/go get golang.org/x/oauth2"
+
+ssh root@lenslocked-project-demo.net "export GOPATH=/root/go; \
+/usr/local/go/bin/go get github.com/dropbox/dropbox-sdk-go-unofficial/dropbox/..."
+
+
 
 echo " Building the code on remote server..."
 ssh root@lenslocked-project-demo.net 'export GOPATH=/root/go; \

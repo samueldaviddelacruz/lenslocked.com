@@ -24,7 +24,7 @@ func NewAuths(os models.OAuthService, configs map[string]*oauth2.Config) *Oauths
 	}
 }
 
-// Users Represents a Users controller
+// Oauths Represents a Oauths controller
 type Oauths struct {
 	os      models.OAuthService
 	configs map[string]*oauth2.Config
