@@ -1,5 +1,16 @@
 # Lens Locked
-An photo gallery application written in Go.
+A photo gallery application written in Go.
+
+## How to Run the project
+Install dependencies (go 1.11+ required):
+```
+go get
+```
+Then proceed to build and run the project
+```
+go run *.go
+```
+it will be running on localhost:4000
 
 ## Built With
 
