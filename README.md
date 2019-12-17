@@ -12,6 +12,3 @@ An photo gallery application written in Go.
 * [oauth2 package](https://godoc.org/golang.org/x/oauth2) - For authenticating with Oauth2 services
 * [Digital Ocean](https://www.digitalocean.com) - For deployment.
 * [Caddy Server](https://caddyserver.com/) - For HTTP proxy and sane security defaults.
-
-## Demo
-* You can try it out here => [Demo](https://lenslocked-project-demo.net/) 
